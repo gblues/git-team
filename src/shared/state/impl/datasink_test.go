@@ -33,7 +33,7 @@ func TestPersistSucceeds(t *testing.T) {
 		replaceAll: func(gitconfigscope.Scope, string, string) error { return nil },
 	}
 
-	err := NewGitConfigDataSink(gitConfigWriter).PersistEnabled(activationscope.Global, []string{"CO-AUTHOR"})
+	err := NewGitConfigDataSink(gitConfigWriter).PersistEnabled(activationscope.Global, []string{"CO-AUTHOR"}, "/previous/hooks/path")
 
 	if err != nil {
 		t.Error(err)
@@ -50,7 +50,7 @@ func TestPersistSucceedsWhenTryingToRemoveNonExistingActiveCoauthorsFromGitConfi
 		replaceAll: func(gitconfigscope.Scope, string, string) error { return nil },
 	}
 
-	err := NewGitConfigDataSink(gitConfigWriter).PersistEnabled(activationscope.Global, []string{"CO-AUTHOR"})
+	err := NewGitConfigDataSink(gitConfigWriter).PersistEnabled(activationscope.Global, []string{"CO-AUTHOR"}, "/previous/hooks/path")
 
 	if err != nil {
 		t.Error(err)
@@ -63,7 +63,7 @@ func TestPersistFailsDueToAnotherUnsetAllFailure(t *testing.T) {
 		unsetAll: func(gitconfigscope.Scope, string) error { return gitconfigerror.ErrConfigFileCannotBeWritten },
 	}
 
-	err := NewGitConfigDataSink(gitConfigWriter).PersistEnabled(activationscope.Global, []string{"CO-AUTHOR"})
+	err := NewGitConfigDataSink(gitConfigWriter).PersistEnabled(activationscope.Global, []string{"CO-AUTHOR"}, "/previous/hooks/path")
 
 	if err == nil {
 		t.Errorf("expected error, got nil")
@@ -77,7 +77,7 @@ func TestPersistFailsDueToAddFailure(t *testing.T) {
 		add:      func(gitconfigscope.Scope, string, string) error { return gitconfigerror.ErrConfigFileCannotBeWritten },
 	}
 
-	err := NewGitConfigDataSink(gitConfigWriter).PersistEnabled(activationscope.Global, []string{"CO-AUTHOR"})
+	err := NewGitConfigDataSink(gitConfigWriter).PersistEnabled(activationscope.Global, []string{"CO-AUTHOR"}, "/previous/hooks/path")
 
 	if err == nil {
 		t.Errorf("expected error, got nil")

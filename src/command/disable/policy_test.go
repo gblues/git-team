@@ -53,7 +53,7 @@ type stateWriterMock struct {
 	persistDisabled func(activationscope.Scope) error
 }
 
-func (mock stateWriterMock) PersistEnabled(scope activationscope.Scope, coauthors []string) error {
+func (mock stateWriterMock) PersistEnabled(scope activationscope.Scope, coauthors []string, previousHooksPath string) error {
 	return nil
 }
 func (mock stateWriterMock) PersistDisabled(scope activationscope.Scope) error {

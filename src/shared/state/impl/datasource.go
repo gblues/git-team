@@ -38,5 +38,8 @@ func (ds GitConfigDataSource) Query(activationScope activationscope.Scope) (stat
 		return state.State{}, fmt.Errorf("no active co-authors found: %s", err)
 	}
 
-	return state.NewStateEnabled(activeCoauthors), nil
+	// TODO: actually look this up
+	previousHooksPath := ""
+
+	return state.NewStateEnabled(activeCoauthors, previousHooksPath), nil
 }

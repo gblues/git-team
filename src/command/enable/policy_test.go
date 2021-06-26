@@ -16,11 +16,12 @@ import (
 )
 
 type gitConfigReaderMock struct {
+	get       func(gitconfigscope.Scope, string) (string, error)
 	getRegexp func(gitconfigscope.Scope, string) (map[string]string, error)
 }
 
 func (mock gitConfigReaderMock) Get(scope gitconfigscope.Scope, key string) (string, error) {
-	return "", nil
+	return mock.get(scope, key)
 }
 
 func (mock gitConfigReaderMock) GetAll(scope gitconfigscope.Scope, key string) ([]string, error) {
@@ -68,11 +69,11 @@ func (mock gitConfigWriterMock) Add(scope gitconfigscope.Scope, key string, valu
 }
 
 type stateWriterMock struct {
-	persistEnabled func(activationscope.Scope, []string) error
+	persistEnabled func(activationscope.Scope, []string, string) error
 }
 
-func (mock stateWriterMock) PersistEnabled(scope activationscope.Scope, coauthors []string) error {
-	return mock.persistEnabled(scope, coauthors)
+func (mock stateWriterMock) PersistEnabled(scope activationscope.Scope, coauthors []string, previousHooksPath string) error {
+	return mock.persistEnabled(scope, coauthors, previousHooksPath)
 }
 func (mock stateWriterMock) PersistDisabled(scope activationscope.Scope) error {
 	return nil
@@ -109,6 +110,9 @@ func defaultDeps() Dependencies {
 	}
 
 	gitConfigReader := &gitConfigReaderMock{
+		get: func(_ gitconfigscope.Scope, key string) (string, error) {
+			return "/previous/hooks/path", nil
+		},
 		getRegexp: func(_ gitconfigscope.Scope, pattern string) (map[string]string, error) {
 			return map[string]string{
 				"team.alias.alias1": "Mrs. Noujz <noujz@mrs.se>",
@@ -117,7 +121,7 @@ func defaultDeps() Dependencies {
 	}
 
 	stateWriter := &stateWriterMock{
-		persistEnabled: func(_ activationscope.Scope, coauthors []string) error {
+		persistEnabled: func(_ activationscope.Scope, coauthors []string, previousHooksPath string) error {
 			return nil
 		},
 	}
@@ -234,7 +238,7 @@ func TestEnableSucceeds(t *testing.T) {
 			}
 
 			deps.StateWriter = &stateWriterMock{
-				persistEnabled: func(scope activationscope.Scope, coauthors []string) error {
+				persistEnabled: func(scope activationscope.Scope, coauthors []string, previousHooksPath string) error {
 					if scope != activationScope {
 						t.Errorf("wrong scope, expected: %s, got: %s", activationScope, scope)
 						t.Fail()
@@ -276,6 +280,7 @@ func TestEnableAllShouldSucceed(t *testing.T) {
 	deps := defaultDeps()
 
 	deps.GitConfigReader = &gitConfigReaderMock{
+		get: func(_ gitconfigscope.Scope, key string) (string, error) { return "/previous/hooks/path", nil },
 		getRegexp: func(_ gitconfigscope.Scope, pattern string) (map[string]string, error) {
 			return map[string]string{
 				"team.alias.alias1": "Mr. Noujz <noujz@mr.se>",
@@ -291,7 +296,7 @@ func TestEnableAllShouldSucceed(t *testing.T) {
 	}
 
 	deps.StateWriter = &stateWriterMock{
-		persistEnabled: func(scope activationscope.Scope, coauthors []string) error {
+		persistEnabled: func(scope activationscope.Scope, coauthors []string, previousHooksPath string) error {
 			if !reflect.DeepEqual(expectedStateRepositoryPersistEnabledCoauthors, coauthors) {
 				t.Errorf("expected: %s, got: %s", expectedStateRepositoryPersistEnabledCoauthors, coauthors)
 				t.Fail()
@@ -318,6 +323,7 @@ func testEnableAllShouldFailWhenLookingUpCoauthorsReturnsAnError(t *testing.T) {
 	deps := defaultDeps()
 
 	deps.GitConfigReader = &gitConfigReaderMock{
+		get: func(_ gitconfigscope.Scope, key string) (string, error) { return "/previous/hooks/path", nil },
 		getRegexp: func(_ gitconfigscope.Scope, pattern string) (map[string]string, error) {
 			return map[string]string{}, err
 		},
@@ -339,6 +345,7 @@ func TestEnableAllShouldAbortWhenNoCoauthorsCouldBeFound(t *testing.T) {
 	deps := defaultDeps()
 
 	deps.GitConfigReader = &gitConfigReaderMock{
+		get: func(_ gitconfigscope.Scope, key string) (string, error) { return "/previous/hooks/path", nil },
 		getRegexp: func(_ gitconfigscope.Scope, pattern string) (map[string]string, error) {
 			return map[string]string{}, nil
 		},
@@ -426,7 +433,7 @@ func TestEnableDropsDuplicateEntries(t *testing.T) {
 	}
 
 	deps.StateWriter = &stateWriterMock{
-		persistEnabled: func(_ activationscope.Scope, coauthors []string) error {
+		persistEnabled: func(_ activationscope.Scope, coauthors []string, previousHooksPath string) error {
 			if !reflect.DeepEqual(expectedStateRepositoryPersistEnabledCoauthors, coauthors) {
 				t.Errorf("expected: %s, got: %s", expectedStateRepositoryPersistEnabledCoauthors, coauthors)
 				t.Fail()
@@ -769,7 +776,7 @@ func TestEnableFailsDueToSaveStatusErr(t *testing.T) {
 	deps := defaultDeps()
 
 	deps.StateWriter = &stateWriterMock{
-		persistEnabled: func(_ activationscope.Scope, _ []string) error {
+		persistEnabled: func(_ activationscope.Scope, _ []string, _ string) error {
 			return stateWriteErr
 		},
 	}
