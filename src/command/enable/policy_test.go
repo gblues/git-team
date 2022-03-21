@@ -317,6 +317,57 @@ func TestEnableAllShouldSucceed(t *testing.T) {
 	}
 }
 
+func TestEnableDoesNotSetAPreviousHooksPathWhenItIsTheGitTeamHooksPath(t *testing.T) {
+	coauthors := &[]string{}
+
+	gitTeamHooksDir := "/root/.git-team/hooks"
+
+	deps := defaultDeps()
+
+	deps.CommitSettingsReader = &commitSettingsReaderMock{
+		read: func() commitsettings.CommitSettings {
+			return commitsettings.CommitSettings{TemplatesBaseDir: "/path/to/commit-templates", HooksDir: gitTeamHooksDir}
+		},
+	}
+
+	deps.GitConfigReader = &gitConfigReaderMock{
+		get: func(_ gitconfigscope.Scope, key string) (string, error) { return gitTeamHooksDir, nil },
+		getRegexp: func(_ gitconfigscope.Scope, pattern string) (map[string]string, error) {
+			return map[string]string{
+				"team.alias.alias1": "Mr. Noujz <noujz@mr.se>",
+				"team.alias.alias2": "Mrs. Noujz <noujz@mrs.se>",
+			}, nil
+		},
+	}
+
+	deps.ConfigReader = &configReaderMock{
+		read: func() (config.Config, error) {
+			return config.Config{ActivationScope: activationscope.Global}, nil
+		},
+	}
+
+	deps.StateWriter = &stateWriterMock{
+		persistEnabled: func(scope activationscope.Scope, coauthors []string, previousHooksPath string) error {
+			if "" != previousHooksPath {
+				t.Errorf("expected: %s, got: %s", "", previousHooksPath)
+				t.Fail()
+			}
+			return nil
+		},
+	}
+
+	req := Request{AliasesAndCoauthors: coauthors, UseAll: &[]bool{true}[0]}
+
+	expectedEvent := Succeeded{}
+
+	event := Policy{deps, req}.Apply()
+
+	if !reflect.DeepEqual(expectedEvent, event) {
+		t.Errorf("expected: %s, got: %s", expectedEvent, event)
+		t.Fail()
+	}
+}
+
 func TestEnableAllShouldFailWhenLookingUpCoauthorsReturnsAnError(t *testing.T) {
 	err := errors.New("exit status 1")
 
@@ -733,6 +784,29 @@ func TestEnableFailsDueToCreateHookSymlinkErr(t *testing.T) {
 	req := Request{AliasesAndCoauthors: coauthors, UseAll: &[]bool{false}[0]}
 
 	expectedEvent := Failed{Reason: []error{fmt.Errorf("failed to install hooks: %s", createSymlinkErr)}}
+
+	event := Policy{deps, req}.Apply()
+
+	if !reflect.DeepEqual(expectedEvent, event) {
+		t.Errorf("expected: %s, got: %s", expectedEvent, event)
+		t.Fail()
+	}
+}
+
+func TestEnableFailsDueToGetPreviousHooksPathErr(t *testing.T) {
+	coauthors := &[]string{"Mr. Noujz <noujz@mr.se>"}
+
+	deps := defaultDeps()
+
+	deps.GitConfigReader = &gitConfigReaderMock{
+		get: func(_ gitconfigscope.Scope, key string) (string, error) {
+			return "", gitconfigerror.ErrNoSectionOrNameProvided
+		},
+	}
+
+	req := Request{AliasesAndCoauthors: coauthors, UseAll: &[]bool{false}[0]}
+
+	expectedEvent := Failed{Reason: []error{fmt.Errorf("failed to get core.hooksPath: %s", gitconfigerror.ErrNoSectionOrNameProvided)}}
 
 	event := Policy{deps, req}.Apply()
 
