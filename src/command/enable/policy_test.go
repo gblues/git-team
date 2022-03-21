@@ -317,7 +317,7 @@ func TestEnableAllShouldSucceed(t *testing.T) {
 	}
 }
 
-func testEnableAllShouldFailWhenLookingUpCoauthorsReturnsAnError(t *testing.T) {
+func TestEnableAllShouldFailWhenLookingUpCoauthorsReturnsAnError(t *testing.T) {
 	err := errors.New("exit status 1")
 
 	deps := defaultDeps()
@@ -331,7 +331,7 @@ func testEnableAllShouldFailWhenLookingUpCoauthorsReturnsAnError(t *testing.T) {
 
 	req := Request{AliasesAndCoauthors: &[]string{}, UseAll: &[]bool{true}[0]}
 
-	expectedEvent := Failed{Reason: []error{err}}
+	expectedEvent := Failed{Reason: []error{fmt.Errorf("failed to lookup coauthors: %s", err.Error())}}
 
 	event := Policy{deps, req}.Apply()
 
