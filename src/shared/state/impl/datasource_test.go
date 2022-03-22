@@ -52,15 +52,15 @@ func TestQueryDisabled(t *testing.T) {
 		},
 	}
 
-	state, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
+	appState, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
 
 	if err != nil {
 		t.Error(err)
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(expectedState, state) {
-		t.Errorf("expected: %s, got: %s", expectedState, state)
+	if !reflect.DeepEqual(expectedState, appState) {
+		t.Errorf("expected: %s, got: %s", expectedState, appState)
 		t.Fail()
 	}
 }
@@ -86,15 +86,15 @@ func TestQueryEnabled(t *testing.T) {
 		},
 	}
 
-	state, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
+	appState, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
 
 	if err != nil {
 		t.Error(err)
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(expectedState, state) {
-		t.Errorf("expected: %s, got: %s", expectedState, state)
+	if !reflect.DeepEqual(expectedState, appState) {
+		t.Errorf("expected: %s, got: %s", expectedState, appState)
 		t.Fail()
 	}
 }
@@ -119,15 +119,15 @@ func TestQueryDisabledWhenStatusUnset(t *testing.T) {
 		},
 	}
 
-	state, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
+	appState, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
 
 	if err != nil {
 		t.Error(err)
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(expectedState, state) {
-		t.Errorf("expected: %s, got: %s", expectedState, state)
+	if !reflect.DeepEqual(expectedState, appState) {
+		t.Errorf("expected: %s, got: %s", expectedState, appState)
 		t.Fail()
 	}
 }
@@ -200,7 +200,7 @@ func TestFailWhenFailingToRetrieveActiveCoAuthors(t *testing.T) {
 		},
 	}
 
-	state, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
+	appState, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
 
 	expectedErr := fmt.Errorf("no active co-authors found: %s", gitconfigerror.ErrSectionOrKeyIsInvalid)
 
@@ -209,8 +209,8 @@ func TestFailWhenFailingToRetrieveActiveCoAuthors(t *testing.T) {
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(expectedState, state) {
-		t.Errorf("expected: %s, got: %s", expectedState, state)
+	if !reflect.DeepEqual(expectedState, appState) {
+		t.Errorf("expected: %s, got: %s", expectedState, appState)
 		t.Fail()
 	}
 }
@@ -235,15 +235,15 @@ func TestEmptyHooksPathOnSpecificGitConfigErr(t *testing.T) {
 		},
 	}
 
-	state, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
+	appState, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
 
 	if err != nil {
 		t.Error(err)
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(expectedState, state) {
-		t.Errorf("expected: %s, got: %s", expectedState, state)
+	if !reflect.DeepEqual(expectedState, appState) {
+		t.Errorf("expected: %s, got: %s", expectedState, appState)
 		t.Fail()
 	}
 }
@@ -268,7 +268,7 @@ func TestFailWhenFailingToRetrievePreviousHooksPath(t *testing.T) {
 		},
 	}
 
-	state, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
+	appState, err := NewGitConfigDataSource(gitConfigReader).Query(activationscope.Global)
 
 	expectedErr := fmt.Errorf("failed to get previous hooks path: %s", gitconfigerror.ErrConfigFileIsInvalid)
 
@@ -277,8 +277,8 @@ func TestFailWhenFailingToRetrievePreviousHooksPath(t *testing.T) {
 		t.Fail()
 	}
 
-	if !reflect.DeepEqual(expectedState, state) {
-		t.Errorf("expected: %s, got: %s", expectedState, state)
+	if !reflect.DeepEqual(expectedState, appState) {
+		t.Errorf("expected: %s, got: %s", expectedState, appState)
 		t.Fail()
 	}
 }
