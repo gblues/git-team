@@ -33,15 +33,12 @@ endif
 
 all: fmt build man-page completion
 
-tidy:
-	go mod tidy
-
-deps: tidy
+deps:
 	go mod download
 
 test: go-test hookscript-tests
 
-go-test: deps
+go-test: mocks deps
 	go test -cover ./src/...
 
 fmt: deps
